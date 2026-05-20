@@ -1701,18 +1701,6 @@ function drawIntro(g){
     }
   }
 
-  // === TAP HINT ===
-  if(t>B1+0.6){
-    var ta=0.5+Math.sin(t*3.2)*0.42;
-    g.save(); g.globalAlpha=ta; g.textAlign='center'; g.textBaseline='middle';
-    var hfs=Math.round(18*Q);
-    g.font='700 '+hfs+'px "Dimbo","Tiki Island",Arial,sans-serif';
-    g.lineJoin='round'; g.lineWidth=Math.round(hfs*0.25);
-    g.strokeStyle='rgba(0,0,0,0.9)'; g.strokeText('Tap anywhere to begin',W/2,H*0.87);
-    g.fillStyle='#ffffff'; g.fillText('Tap anywhere to begin',W/2,H*0.87);
-    g.restore();
-  }
-
   if(t>B2+1.8) endIntro();
 }
 
