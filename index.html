@@ -1932,7 +1932,6 @@ function loop(ts){
   drawIntro(gc);
   drawWaveAnnounce(gc);
   drawDangerZone(gc);
-  drawTutHand(gc);
 
   // Hook sequence (replaces old chest)
   drawHook(gc);
@@ -1954,6 +1953,9 @@ function loop(ts){
     gc.restore();
   });
   G.hookParticles=G.hookParticles.filter(function(p){return !p.dead;});
+
+  // Tutorial hand — always on outermost layer (drawn last)
+  drawTutHand(gc);
 
   gc.restore();
 }
