@@ -192,14 +192,14 @@ body.intro-active #mute-btn{opacity:0!important;pointer-events:none!important;tr
       <div id="cta-badge">You defended the forest!</div>
       <div id="cta-pet-wrap">
         <div id="cta-pet-glow"></div>
-        <canvas id="cta-pet-canvas" width="220" height="190" style="display:block;margin:0 auto;image-rendering:pixelated"></canvas>
+        <canvas id="cta-pet-canvas" width="180" height="155" style="display:block;margin:0 auto;image-rendering:pixelated"></canvas>
       </div>
       <div id="cta-unlock-text">You earned a Rare Pet!</div>
       <div id="cta-divider"></div>
       <div id="cta-fomo">Collect <em>100+ rare pets</em><br>and explore Animal Jam!</div>
       <div id="cta-pills">
         <div class="cta-pill">100+ Pets</div>
-        <div class="cta-pill">Custom Worlds</div>
+        <div class="cta-pill">Custom Den</div>
         <div class="cta-pill">Play Together</div>
       </div>
       <button id="cta-btn" onclick="ctaClick()">&#9654;&nbsp; PLAY ANIMAL JAM FREE</button>
@@ -441,7 +441,7 @@ function scaleHUD(){
   if(ctaSub) ctaSub.style.fontSize=Math.round(11*Q)+'px';
   document.querySelectorAll('.cta-pill').forEach(function(p){p.style.fontSize=Math.round(11*Q)+'px';});
   var petCvs=document.getElementById('cta-pet-canvas');
-  if(petCvs){var psz=Math.round(220*Q);petCvs.width=psz;petCvs.height=Math.round(190*Q);petCvs.style.width=psz+'px';petCvs.style.height=Math.round(190*Q)+'px';}
+  if(petCvs){var psz=Math.round(180*Q);petCvs.width=psz;petCvs.height=Math.round(155*Q);petCvs.style.width=psz+'px';petCvs.style.height=Math.round(155*Q)+'px';}
 }
 
 function resize(){
@@ -1766,7 +1766,7 @@ function startCtaPetAnim(){
   var ctx2=cvs.getContext('2d');
   var petImg=imgs['petSheet'];
   function frame(){
-    petCtaTimer+=1/8;
+    petCtaTimer+=1;
     var fi=Math.floor(petCtaTimer)%PET_DANCE.length;
     var fr=PET_DANCE[fi];
     ctx2.clearRect(0,0,cvs.width,cvs.height);
@@ -1775,7 +1775,7 @@ function startCtaPetAnim(){
       var dw=fr.w*sc, dh=fr.h*sc;
       ctx2.drawImage(petImg,fr.x,fr.y,fr.w,fr.h,(cvs.width-dw)/2,(cvs.height-dh)/2,dw,dh);
     }
-    petCtaRaf=setTimeout(frame,125); // 8fps
+    petCtaRaf=setTimeout(frame,100); // 10fps
   }
   frame();
 }
