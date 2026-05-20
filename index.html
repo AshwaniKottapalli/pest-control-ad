@@ -395,6 +395,7 @@ var hc = handCanvas.getContext('2d');
 var gc = canvas.getContext('2d');
 var W=390, H=720, Q=1;
 var scale=1, offX=0, offY=0;
+var wrapLeft=0, wrapTop=0; // wrap offset from viewport (phone-frame mode)
 var MAP_TOP=54, MAP_H=608, MAP_W=390;
 
 function updateMapBounds(){
@@ -453,6 +454,7 @@ function resize(){
   var mobilePotrait = vw<500 && vw<=vh;
   if(mobilePotrait){
     W=vw; H=vh;
+    wrapLeft=0; wrapTop=0;
     wrap.style.left='0px'; wrap.style.top='0px';
     wrap.style.borderRadius='0';
     wrap.style.boxShadow='none';
@@ -464,6 +466,7 @@ function resize(){
     var ps=Math.min(scaleH,scaleW);
     W=Math.round(PHONE_W*ps); H=Math.round(PHONE_H*ps);
     var left=Math.round((vw-W)/2), top=Math.round((vh-H)/2);
+    wrapLeft=left; wrapTop=top;
     wrap.style.left=left+'px'; wrap.style.top=top+'px';
     wrap.style.borderRadius=Math.round(32*ps)+'px';
     wrap.style.boxShadow='0 0 0 '+Math.round(8*ps)+'px #111,0 0 0 '+Math.round(11*ps)+'px #2a2a2a,0 '+Math.round(40*ps)+'px '+Math.round(100*ps)+'px rgba(0,0,0,.85)';
@@ -1078,7 +1081,7 @@ function moveHandTo(x,y,dur,cb){
 // ============================================================
 var dg=document.getElementById('drag-ghost');
 
-function canvasToGame(cx,cy){ return {x:(cx-offX)/scale, y:(cy-offY)/scale}; }
+function canvasToGame(cx,cy){ return {x:(cx-wrapLeft-offX)/scale, y:(cy-wrapTop-offY)/scale}; }
 
 function startDrag(type,cx,cy){
   if(G.phase==='cta') return;
@@ -1151,17 +1154,17 @@ function placeDefender(type,x,y){
   function tryDrag(e){
     e.stopPropagation(); e.preventDefault();
     if(el.classList.contains('locked')||el.style.pointerEvents==='none') return;
-    var cx=e.clientX||e.touches[0].clientX, cy=e.clientY||e.touches[0].clientY;
+    var cx=(e.clientX||e.touches[0].clientX)-wrapLeft, cy=(e.clientY||e.touches[0].clientY)-wrapTop;
     startDrag(type,cx,cy);
   }
   el.addEventListener('mousedown',tryDrag);
   el.addEventListener('touchstart',tryDrag,{passive:false});
 });
 
-document.addEventListener('mousemove',function(e){moveDrag(e.clientX,e.clientY);});
-document.addEventListener('mouseup',function(e){endDrag(e.clientX,e.clientY);});
-document.addEventListener('touchmove',function(e){if(G.dragActive){var t=e.touches[0];moveDrag(t.clientX,t.clientY);}},{passive:true});
-document.addEventListener('touchend',function(e){if(G.dragActive){var t=e.changedTouches[0];endDrag(t.clientX,t.clientY);}});
+document.addEventListener('mousemove',function(e){moveDrag(e.clientX-wrapLeft,e.clientY-wrapTop);});
+document.addEventListener('mouseup',function(e){endDrag(e.clientX-wrapLeft,e.clientY-wrapTop);});
+document.addEventListener('touchmove',function(e){if(G.dragActive){var t=e.touches[0];moveDrag(t.clientX-wrapLeft,t.clientY-wrapTop);}},{passive:true});
+document.addEventListener('touchend',function(e){if(G.dragActive){var t=e.changedTouches[0];endDrag(t.clientX-wrapLeft,t.clientY-wrapTop);}});
 
 canvas.addEventListener('mousedown',function(){initAudio();loadAllAudio(null);});
 canvas.addEventListener('touchstart',function(){initAudio();loadAllAudio(null);},{passive:true});
@@ -1220,8 +1223,8 @@ function updateTutorial(dt){
   if(G.phase==='intro'||!tut.active||G.tutorialDone||G.playerInteracted) return;
   var slot=document.getElementById('ds-plant');
   var r=slot.getBoundingClientRect();
-  // Slot center in canvas coords (wrap is at 0,0)
-  var sx=r.left+r.width/2, sy=r.top+r.height/2;
+  // Slot center in wrap-relative coords
+  var sx=r.left+r.width/2-wrapLeft, sy=r.top+r.height/2-wrapTop;
   // Target: valid grass zone near path entry
   // Target: grass zone near bottom path segment (between Start and Turn 1)
   var tx=MAP_W*0.38, ty=MAP_H*0.72;
