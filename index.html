@@ -1232,10 +1232,7 @@ var TL=[
     setTimeout(function(){ if(bufs['bgm']) playBGM('bgm'); },100);
     setTimeout(startTutorial, 600);
   }},
-  // Wave 2, boss — still time-based from when wave1 starts (G.gameStartTime)
-
-  // Wave 2 and boss are fired from WAVE_TL below, keyed on G.gameTime
-];
+  // Wave 2 and boss fired from WAVE_TL, keyed on G.gameTime
 ];
 
 var tlFired=TL.map(function(){return false;});
@@ -1488,16 +1485,20 @@ function drawWaveAnnounce(g){
   g.save();
   g.globalAlpha=a;
   g.textAlign='center';
+  // Auto-fit font size so text never exceeds 88% of screen width
   var fs=Math.round(52*Q);
   g.font='900 '+fs+'px "Arial Rounded MT Bold",Arial,sans-serif';
-  g.fillStyle=wa.color;
+  var maxW=W*0.88;
+  var tw=g.measureText(wa.text).width;
+  if(tw>maxW) fs=Math.floor(fs*(maxW/tw));
+  g.font='900 '+fs+'px "Arial Rounded MT Bold",Arial,sans-serif';
   g.shadowColor='rgba(0,0,0,.9)'; g.shadowBlur=18;
-  // 3D offset
+  // 3D shadow offset
   g.fillStyle='rgba(0,0,0,0.5)';
-  g.fillText(wa.text,W/2+4*Q,(H/2)*slide+4*Q);
+  g.fillText(wa.text,W/2+3,H/2*slide+3);
   g.fillStyle=wa.color;
-  g.shadowColor=wa.color; g.shadowBlur=30;
-  g.fillText(wa.text,W/2,(H/2)*slide);
+  g.shadowColor=wa.color; g.shadowBlur=28;
+  g.fillText(wa.text,W/2,H/2*slide);
   g.restore();
 }
 
