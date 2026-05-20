@@ -93,12 +93,15 @@ html,body{width:100%;height:100%;overflow:hidden;background:#1a3a0f;font-family:
 #tut-tooltip{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:linear-gradient(to bottom,#5a3a10,#3a2208);border:2px solid #F0C040;border-radius:12px;padding:8px 14px;color:#fff;font-size:13px;font-weight:800;white-space:nowrap;text-align:center;pointer-events:none;z-index:40;opacity:0;transition:opacity .3s;margin-bottom:8px;text-shadow:1px 1px 0 rgba(0,0,0,.6);box-shadow:0 4px 12px rgba(0,0,0,.5)}
 #tut-tooltip.show{opacity:1}
 
-/* Hook mode — hide all UI, canvas draws everything */
+/* Hook/intro mode — hide all UI */
 body.hook-active #hud,
 body.hook-active #tray,
 body.hook-active #install-btn,
 body.hook-active #mute-btn,
-body.hook-active #boss-vignette{opacity:0!important;pointer-events:none!important;transition:opacity .6s ease}
+body.hook-active #boss-vignette,
+body.intro-active #hud,
+body.intro-active #install-btn,
+body.intro-active #mute-btn{opacity:0!important;pointer-events:none!important;transition:opacity .4s ease}
 </style>
 </head>
 <body>
@@ -1598,38 +1601,62 @@ function drawIntro(g){
     });
   }
 
-  // === TEXT BEATS — AJ 3D style, each stays and accumulates ===
+  // === TEXT BLOCK — grouped, centered, consistent white+gold AJ 3D ===
+  // All lines in a tight block centered at 45% height
   var BEATS=[
-    {text:'The forest is in danger...',color:'#FFE87A',shadow:'#5a3a00',start:0.3,  fs:0.72},
-    {text:'Pests are coming!',          color:'#FF5500', shadow:'#5a0000',start:1.5,  fs:0.88},
-    {text:'Defend it!',                 color:'#8BF040', shadow:'#0a3000',start:2.7,  fs:1.05},
+    {text:'The forest is in danger...',start:0.3,  fs:0.70},
+    {text:'Pests are coming!',          start:1.4,  fs:0.88},
+    {text:'Defend it!',                 start:2.5,  fs:1.10},
   ];
-  var yPositions=[0.33, 0.50, 0.67];
+  var lineSpacing=H*0.095; // tight grouping
+  var blockCenterY=H*0.44;
+  var totalH=lineSpacing*(BEATS.length-1);
+  var firstY=blockCenterY-totalH/2;
+
+  // Dark backdrop behind text block (readability)
+  var visibleBeats=BEATS.filter(function(b){return t>=b.start;});
+  if(visibleBeats.length>0){
+    var padX=W*0.08, padY=H*0.035;
+    var bx=padX, bw=W-padX*2;
+    var by=firstY-padY-H*0.04;
+    var bh=totalH+padY*2+H*0.08;
+    var overallAlpha=Math.min(1,(t-0.3)/0.5);
+    g.save();
+    g.globalAlpha=overallAlpha*0.45;
+    g.fillStyle='#000';
+    var rr=16; // rounded corners
+    g.beginPath();
+    g.roundRect?g.roundRect(bx,by,bw,bh,rr):g.rect(bx,by,bw,bh);
+    g.fill();
+    g.restore();
+  }
 
   BEATS.forEach(function(b,i){
     var bt=t-b.start;
     if(bt<0) return;
-    var fadeIn=Math.min(1,bt/0.35);
-    var slideY=Math.max(0,1-bt/0.4); // slides up from below
-    var fs=Math.round(b.fs*44*Q);
+    var fadeIn=Math.min(1,bt/0.4);
+    var slideOff=(1-Math.min(1,bt/0.35))*H*0.05; // slides up slightly as it appears
+    var yPos=firstY+i*lineSpacing+slideOff;
+    var fs=Math.round(b.fs*42*Q);
     g.font='900 '+fs+'px "Dimbo","Tiki Island",Arial,sans-serif';
-    var maxW=W*0.86;
+    var maxW=W*0.84;
     var tw=g.measureText(b.text).width;
-    if(tw>maxW){fs=Math.floor(fs*(maxW/tw));}
+    if(tw>maxW) fs=Math.floor(fs*(maxW/tw));
     g.save();
     g.globalAlpha=fadeIn;
-    ajText3D(g,b.text,W/2,H*(yPositions[i]+slideY*0.08),b.color,b.shadow,fs);
+    // White on top, amber/gold shadow underneath — AJ brand, consistent
+    ajText3D(g,b.text,W/2,yPos,'#ffffff','#7a4400',fs);
     g.restore();
   });
 
-  // === TAP HINT — appears after all text shown ===
+  // === TAP HINT ===
   var allShown=t>BEATS[BEATS.length-1].start+0.8;
   if(allShown){
     var ta=0.55+Math.sin(t*2.5)*0.35;
     g.save(); g.globalAlpha=ta; g.textAlign='center'; g.textBaseline='middle';
     g.font='700 '+Math.round(15*Q)+'px "Dimbo",Arial,sans-serif';
-    g.fillStyle='#ffffff'; g.shadowColor='rgba(0,0,0,.8)'; g.shadowBlur=8;
-    g.fillText('Tap anywhere to begin',W/2,H*0.86);
+    g.fillStyle='#ffffff'; g.shadowColor='rgba(0,0,0,.9)'; g.shadowBlur=10;
+    g.fillText('Tap anywhere to begin',W/2,H*0.84);
     g.restore();
   }
 
@@ -1641,9 +1668,9 @@ function endIntro(){
   if(G.intro.done) return;
   G.intro.done=true;
   G.phase='tutorial';
+  document.body.classList.remove('intro-active');
   document.getElementById('tray').style.opacity='1';
   startTrayAnim('plant');
-  // small delay so tray fades in nicely before tutorial prompt
   setTimeout(startTutorial,350);
 }
 
@@ -2007,6 +2034,7 @@ function loop(ts){
 // BOOT
 // ============================================================
 loadAllImages(function(){
+  document.body.classList.add('intro-active');
   // Try immediate audio init
   try{initAudio();loadAllAudio(null);}catch(e){}
 
