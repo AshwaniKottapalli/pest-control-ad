@@ -1771,9 +1771,9 @@ function startCtaPetAnim(){
     var fr=PET_DANCE[fi];
     ctx2.clearRect(0,0,cvs.width,cvs.height);
     if(petImg&&petImg.complete){
-      var aspect=fr.w/fr.h;
-      var dh=cvs.height, dw=dh*aspect;
-      ctx2.drawImage(petImg,fr.x,fr.y,fr.w,fr.h,(cvs.width-dw)/2,0,dw,dh);
+      var sc=Math.min(cvs.width/fr.w, cvs.height/fr.h)*0.90;
+      var dw=fr.w*sc, dh=fr.h*sc;
+      ctx2.drawImage(petImg,fr.x,fr.y,fr.w,fr.h,(cvs.width-dw)/2,(cvs.height-dh)/2,dw,dh);
     }
     petCtaRaf=setTimeout(frame,125); // 8fps
   }
