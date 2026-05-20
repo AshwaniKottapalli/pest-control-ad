@@ -654,7 +654,7 @@ function Enemy(type,delay){
   this.delay=delay||0;
   this.started=false;
   this.t=0;
-  this.speed = type==='ant'?0.025 : type==='beetle'?0.065 : 0.040;
+  this.speed = type==='ant'?0.042 : type==='beetle'?0.075 : 0.048;
   this.maxHp = type==='ant'?80 : type==='beetle'?160 : 700;
   this.hp=this.maxHp;
   this.dead=false; this.dying=false; this.reachedEnd=false; this.staggerT=0;
@@ -1201,8 +1201,8 @@ function endTutorial(x,y){
   tut.active=false;
   document.getElementById('ds-plant').classList.remove('tutorial-pulse');
   hideTooltip();
-  // Countdown 3...2...1...GO! then launch wave 1
-  runCountdown(['3','2','1','GO!'], ['#fff','#fff','#fff','#44FF88'], function(){
+  // Quick GO! flash then launch wave 1
+  runCountdown(['GO!'], ['#44FF88'], function(){
     G.paused=false;
     G.gameStarted=true;
     startWave1();
@@ -1214,9 +1214,9 @@ function runCountdown(steps,colors,cb){
   var i=0;
   function next(){
     if(i>=steps.length){if(cb)cb();return;}
-    G.waveAnnounce={text:steps[i],timer:0.85,color:colors[i]||'#fff'};
+    G.waveAnnounce={text:steps[i],timer:0.6,color:colors[i]||'#fff'};
     i++;
-    setTimeout(next,900);
+    setTimeout(next,650);
   }
   next();
 }
