@@ -395,7 +395,7 @@ var hc = handCanvas.getContext('2d');
 var gc = canvas.getContext('2d');
 var W=390, H=720, Q=1;
 var scale=1, offX=0, offY=0;
-var wrapLeft=0, wrapTop=0; // wrap offset from viewport (phone-frame mode)
+var wrapLeft=0, wrapTop=0, phoneScale=1;
 var MAP_TOP=54, MAP_H=608, MAP_W=390;
 
 function updateMapBounds(){
@@ -450,26 +450,28 @@ function scaleHUD(){
 function resize(){
   var vw=window.innerWidth, vh=window.innerHeight;
   var wrap=document.getElementById('wrap');
-  // Phone-frame mode: landscape, tablet, or desktop (not narrow portrait)
-  var mobilePotrait = vw<500 && vw<=vh;
+  var mobilePotrait=vw<500&&vw<=vh;
   if(mobilePotrait){
+    // Full-screen mobile portrait — no transform, game fills viewport
     W=vw; H=vh;
-    wrapLeft=0; wrapTop=0;
+    wrapLeft=0; wrapTop=0; phoneScale=1;
+    wrap.style.width=W+'px'; wrap.style.height=H+'px';
     wrap.style.left='0px'; wrap.style.top='0px';
+    wrap.style.transform='none';
     wrap.style.borderRadius='0';
     wrap.style.boxShadow='none';
     document.body.classList.remove('phone-frame');
   } else {
-    // Fit a 390:844 phone portrait inside the viewport with margin
-    var PHONE_W=390, PHONE_H=844;
-    var scaleH=(vh*0.88)/PHONE_H, scaleW=(vw*0.82)/PHONE_W;
-    var ps=Math.min(scaleH,scaleW);
-    W=Math.round(PHONE_W*ps); H=Math.round(PHONE_H*ps);
-    var left=Math.round((vw-W)/2), top=Math.round((vh-H)/2);
-    wrapLeft=left; wrapTop=top;
-    wrap.style.left=left+'px'; wrap.style.top=top+'px';
-    wrap.style.borderRadius=Math.round(32*ps)+'px';
-    wrap.style.boxShadow='0 0 0 '+Math.round(8*ps)+'px #111,0 0 0 '+Math.round(11*ps)+'px #2a2a2a,0 '+Math.round(40*ps)+'px '+Math.round(100*ps)+'px rgba(0,0,0,.85)';
+    // Phone-frame: game always renders at 390×720 (mobile dims), CSS scales to fit
+    W=390; H=720;
+    var s=Math.min((vw*0.82)/W,(vh*0.88)/H);
+    wrapLeft=(vw-W*s)/2; wrapTop=(vh-H*s)/2; phoneScale=s;
+    wrap.style.width=W+'px'; wrap.style.height=H+'px';
+    wrap.style.left='0px'; wrap.style.top='0px';
+    wrap.style.transformOrigin='top left';
+    wrap.style.transform='translate('+wrapLeft+'px,'+wrapTop+'px) scale('+s+')';
+    wrap.style.borderRadius='30px';
+    wrap.style.boxShadow='0 0 0 8px #111,0 0 0 11px #2a2a2a,0 40px 100px rgba(0,0,0,.85)';
     document.body.classList.add('phone-frame');
   }
   scale=1; offX=0; offY=0;
@@ -480,8 +482,6 @@ function resize(){
   handCanvas.style.width=W+'px'; handCanvas.style.height=H+'px';
   canvas.style.width=W+'px'; canvas.style.height=H+'px';
   canvas.style.left='0px'; canvas.style.top='0px';
-  wrap.style.width=W+'px'; wrap.style.height=H+'px';
-  wrap.style.transform='none';
   scaleHUD();
   if(typeof buildPath==='function') buildPath();
 }
@@ -1081,7 +1081,9 @@ function moveHandTo(x,y,dur,cb){
 // ============================================================
 var dg=document.getElementById('drag-ghost');
 
-function canvasToGame(cx,cy){ return {x:(cx-wrapLeft-offX)/scale, y:(cy-wrapTop-offY)/scale}; }
+function canvasToGame(cx,cy){ return {x:(cx-offX)/scale, y:(cy-offY)/scale}; }
+// Convert viewport clientX/Y → game coords (accounts for phone-frame offset+scale)
+function evtToGame(cx,cy){ return {x:(cx-wrapLeft)/phoneScale, y:(cy-wrapTop)/phoneScale}; }
 
 function startDrag(type,cx,cy){
   if(G.phase==='cta') return;
@@ -1154,17 +1156,17 @@ function placeDefender(type,x,y){
   function tryDrag(e){
     e.stopPropagation(); e.preventDefault();
     if(el.classList.contains('locked')||el.style.pointerEvents==='none') return;
-    var cx=(e.clientX||e.touches[0].clientX)-wrapLeft, cy=(e.clientY||e.touches[0].clientY)-wrapTop;
-    startDrag(type,cx,cy);
+    var p=evtToGame(e.clientX||e.touches[0].clientX, e.clientY||e.touches[0].clientY);
+    startDrag(type,p.x,p.y);
   }
   el.addEventListener('mousedown',tryDrag);
   el.addEventListener('touchstart',tryDrag,{passive:false});
 });
 
-document.addEventListener('mousemove',function(e){moveDrag(e.clientX-wrapLeft,e.clientY-wrapTop);});
-document.addEventListener('mouseup',function(e){endDrag(e.clientX-wrapLeft,e.clientY-wrapTop);});
-document.addEventListener('touchmove',function(e){if(G.dragActive){var t=e.touches[0];moveDrag(t.clientX-wrapLeft,t.clientY-wrapTop);}},{passive:true});
-document.addEventListener('touchend',function(e){if(G.dragActive){var t=e.changedTouches[0];endDrag(t.clientX-wrapLeft,t.clientY-wrapTop);}});
+document.addEventListener('mousemove',function(e){var p=evtToGame(e.clientX,e.clientY);moveDrag(p.x,p.y);});
+document.addEventListener('mouseup',function(e){var p=evtToGame(e.clientX,e.clientY);endDrag(p.x,p.y);});
+document.addEventListener('touchmove',function(e){if(G.dragActive){var t=e.touches[0];var p=evtToGame(t.clientX,t.clientY);moveDrag(p.x,p.y);}},{passive:true});
+document.addEventListener('touchend',function(e){if(G.dragActive){var t=e.changedTouches[0];var p=evtToGame(t.clientX,t.clientY);endDrag(p.x,p.y);}});
 
 canvas.addEventListener('mousedown',function(){initAudio();loadAllAudio(null);});
 canvas.addEventListener('touchstart',function(){initAudio();loadAllAudio(null);},{passive:true});
@@ -1223,8 +1225,8 @@ function updateTutorial(dt){
   if(G.phase==='intro'||!tut.active||G.tutorialDone||G.playerInteracted) return;
   var slot=document.getElementById('ds-plant');
   var r=slot.getBoundingClientRect();
-  // Slot center in wrap-relative coords
-  var sx=r.left+r.width/2-wrapLeft, sy=r.top+r.height/2-wrapTop;
+  var _sc=evtToGame(r.left+r.width/2, r.top+r.height/2);
+  var sx=_sc.x, sy=_sc.y;
   // Target: valid grass zone near path entry
   // Target: grass zone near bottom path segment (between Start and Turn 1)
   var tx=MAP_W*0.38, ty=MAP_H*0.72;
