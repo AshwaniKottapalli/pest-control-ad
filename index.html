@@ -541,6 +541,7 @@ var G={
   gameTime:0, gameStarted:false,
   waveEnemies:[],
   hookTimer:0, hookParticles:[], hookDissolveStarted:false,
+  fadeOverlay:{active:false, alpha:0, dir:0, speed:0, onMidpoint:null},
 };
 
 // ============================================================
@@ -1707,11 +1708,18 @@ function drawIntro(g){
 function endIntro(){
   if(G.intro.done) return;
   G.intro.done=true;
-  G.phase='tutorial';
-  document.body.classList.remove('intro-active');
-  document.getElementById('tray').style.opacity='1';
-  startTrayAnim('plant');
-  setTimeout(startTutorial,350);
+  // Fade to black → swap to gameplay → fade in
+  G.fadeOverlay.active=true;
+  G.fadeOverlay.alpha=0;
+  G.fadeOverlay.dir=1;
+  G.fadeOverlay.speed=1/0.35;
+  G.fadeOverlay.onMidpoint=function(){
+    G.phase='tutorial';
+    document.body.classList.remove('intro-active');
+    document.getElementById('tray').style.opacity='1';
+    startTrayAnim('plant');
+    setTimeout(startTutorial,400);
+  };
 }
 
 // ============================================================
@@ -2068,6 +2076,19 @@ function loop(ts){
   drawTutHand();
 
   gc.restore();
+
+  // Fade overlay — outside screen shake, always on very top
+  var fo=G.fadeOverlay;
+  if(fo.active){
+    fo.alpha=Math.max(0,Math.min(1,fo.alpha+fo.dir*fo.speed*dt));
+    gc.fillStyle='rgba(0,0,0,'+fo.alpha+')';
+    gc.fillRect(0,0,W,H);
+    if(fo.dir>0&&fo.alpha>=1&&fo.onMidpoint){
+      var cb=fo.onMidpoint; fo.onMidpoint=null; cb();
+      fo.dir=-1; fo.speed=1/0.45;
+    }
+    if(fo.dir<0&&fo.alpha<=0) fo.active=false;
+  }
 }
 
 // ============================================================
