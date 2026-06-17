@@ -1472,7 +1472,7 @@ var TL=[
     G.paused=true; // stay paused until first defender placed
     // BGM fades in quietly during intro
     setTimeout(function(){
-      if(bufs['bgm']){bgmGain.gain.value=0.08;playBGM('bgm');fadeBGM(0.32,3.5);}
+      if(G.playerInteracted&&bufs['bgm']){bgmGain.gain.value=0.08;playBGM('bgm');fadeBGM(0.32,3.5);}
     },200);
   }},
   // Wave 2 and boss fired from WAVE_TL, keyed on G.gameTime
@@ -2639,8 +2639,7 @@ function loop(ts){
     Q=Math.min(W/390,H/720);
     buildPath();
   }
-  // Try immediate audio init
-  try{initAudio();loadAllAudio(null);}catch(e){}
+  // Audio init deferred to first user interaction (ad spec compliance)
 
   // Fallback on first user touch
   function firstInteract(){
