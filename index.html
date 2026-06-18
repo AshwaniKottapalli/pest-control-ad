@@ -685,14 +685,14 @@ var PLACEMENT_GRID_PORTRAIT = [
   "0000000000000001000000000000000100000000",
   "0000000000000001000000000000000100000000",
   "0000000000000001111111110000000100000000",
-  "0000000000000001111111110000000100000000",
-  "0000000000000000000000110000000100000000",
-  "0000000000000000000000110000000100000000",
-  "0000000000000000000000110000000100000000",
-  "0000000000000000000000110000000100000000",
-  "0000000000000000000000110000000100000000",
-  "0000000000000000000000110000000100000000",
-  "0000000000111111111111110000000100000000",
+  "0000000000000000000000010000000100000000",
+  "0000000000000000000000010000000100000000",
+  "0000000000000000000000010000000100000000",
+  "0000000000000000000000010000000100000000",
+  "0000000000000000000000010000000100000000",
+  "0000000000000000000000010000000100000000",
+  "0000000000000000000000010000000100000000",
+  "0000000000000000000000010000000100000000",
   "0000000000111111111111110000000100000000",
   "0000000000000000000000000000000100000000",
   "0000000000000000000000000000000100000000",
@@ -701,7 +701,7 @@ var PLACEMENT_GRID_PORTRAIT = [
   "0000000000000000000000000000000100000000",
   "0000000000000000000000000000000100000000",
   "0000000000111111111111111111111100000000",
-  "0000000000111111111111111111111100000000",
+  "0000000000000000000000000000000000000000",
   "0000000000000000000000000000000000000000",
   "0000000000000000000000000000000000000000",
   "0000000000000000000000000000000000000000",
@@ -939,9 +939,9 @@ function getFacingDir(x, y){
 
 function Defender(type,x,y){
   this.type=type; this.x=x; this.y=y;
-  this.range=(type==='plant'?80:150)*Q;
-  this.dmg=type==='plant'?55:36;
-  this.cd=type==='plant'?1.1:0.75;
+  this.range=(type==='plant'?65:120)*Q;
+  this.dmg=type==='plant'?42:28;
+  this.cd=type==='plant'?1.3:0.95;
   this.cdT=0; this.target=null;
   this.w=(type==='plant'?156:198)*Q; this.h=(type==='plant'?162:198)*Q;
   this.facingDir=getFacingDir(x,y); // direction toward nearest path point
@@ -1248,8 +1248,9 @@ function endDrag(cx,cy){
   G.dragActive=false;
   dg.style.display='none';
   var gp=canvasToGame(cx,cy);
-  var _DCOLS=landscapeOffset>0?GRID_COLS:Math.min(GRID_COLS,Math.round(MAP_W/40));
-  var _DROWS=landscapeOffset>0?GRID_ROWS:Math.min(GRID_ROWS,Math.round(MAP_H/40));
+  var _sq2=landscapeOffset>0?40:Math.min(W,H)*0.10;
+  var _DCOLS=landscapeOffset>0?GRID_COLS:Math.min(GRID_COLS,Math.round(MAP_W/_sq2));
+  var _DROWS=landscapeOffset>0?GRID_ROWS:Math.min(GRID_ROWS,Math.round(MAP_H/_sq2));
   var _dcw=MAP_W/_DCOLS, _dch=MAP_H/_DROWS;
   var _dc=Math.max(0,Math.min(_DCOLS-1,Math.floor((gp.x/MAP_W)*_DCOLS)));
   var _dr=Math.max(0,Math.min(_DROWS-1,Math.floor(((gp.y-MAP_TOP)/MAP_H)*_DROWS)));
@@ -2450,8 +2451,9 @@ function drawPlacementIndicator(g){
   var gp=dragging?canvasToGame(G.dragX,G.dragY):null;
   var valid=dragging?isValidZone(gp.x,gp.y):false;
   // Landscape: 1:1 with grid; Portrait: merge to ~40px cells
-  var DCOLS=landscapeOffset>0?GRID_COLS:Math.min(GRID_COLS,Math.round(MAP_W/40));
-  var DROWS=landscapeOffset>0?GRID_ROWS:Math.min(GRID_ROWS,Math.round(MAP_H/40));
+  var _sq=landscapeOffset>0?40:Math.min(W,H)*0.10;
+  var DCOLS=landscapeOffset>0?GRID_COLS:Math.min(GRID_COLS,Math.round(MAP_W/_sq));
+  var DROWS=landscapeOffset>0?GRID_ROWS:Math.min(GRID_ROWS,Math.round(MAP_H/_sq));
   var dsw=MAP_W/DCOLS, dsh=MAP_H/DROWS;
   var inset=2, pulse=0.6+0.4*Math.sin(G.time*3.5);
   var hCol=gp?Math.floor((gp.x/MAP_W)*DCOLS):-1;
